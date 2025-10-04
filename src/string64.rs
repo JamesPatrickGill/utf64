@@ -113,3 +113,47 @@ impl String64 {
         String::from_utf8(utf8_bytes).map_err(|_| Utf64Error::InvalidUtf8)
     }
 }
+
+impl Default for String64 {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl From<&str> for String64 {
+    fn from(s: &str) -> Self {
+        Self::encode(s).expect("valid UTF-8 &str should always encode to UTF64")
+    }
+}
+
+impl From<String> for String64 {
+    fn from(s: String) -> Self {
+        Self::encode(&s).expect("valid UTF-8 String should always encode to UTF64")
+    }
+}
+
+impl FromStr for String64 {
+    type Err = Utf64Error;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        Self::encode(s)
+    }
+}
+
+impl fmt::Display for String64 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.to_string() {
+            Ok(s) => write!(f, "{s}"),
+            Err(_) => write!(f, "<invalid UTF64>"),
+        }
+    }
+}
+
+impl fmt::Debug for String64 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.to_string() {
+            Ok(s) => write!(f, "String64({s:?})"),
+            Err(_) => write!(f, "String64(<invalid>)"),
+        }
+    }
+}
