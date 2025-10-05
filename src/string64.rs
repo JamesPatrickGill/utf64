@@ -1,5 +1,11 @@
 use crate::error::{Result, Utf64Error};
-use std::{fmt, str::FromStr};
+use std::{
+    fmt,
+    hash::{Hash, Hasher},
+    iter::{Extend, FromIterator},
+    ops::{Index, Range, RangeFrom, RangeFull, RangeTo},
+    str::FromStr,
+};
 
 /// A UTF64-encoded string.
 ///
@@ -154,6 +160,214 @@ impl fmt::Debug for String64 {
         match self.to_string() {
             Ok(s) => write!(f, "String64({s:?})"),
             Err(_) => write!(f, "String64(<invalid>)"),
+        }
+    }
+}
+
+impl Hash for String64 {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.data.hash(state);
+    }
+}
+
+impl PartialOrd for String64 {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for String64 {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        // Lexicographic comparison by decoding to strings
+        match (self.to_string(), other.to_string()) {
+            (Ok(s1), Ok(s2)) => s1.cmp(&s2),
+            (Ok(_), Err(_)) => std::cmp::Ordering::Greater,
+            (Err(_), Ok(_)) => std::cmp::Ordering::Less,
+            (Err(_), Err(_)) => std::cmp::Ordering::Equal,
+        }
+    }
+}
+
+impl Index<usize> for String64 {
+    type Output = u64;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.data[index]
+    }
+}
+
+impl Index<Range<usize>> for String64 {
+    type Output = [u64];
+
+    fn index(&self, range: Range<usize>) -> &Self::Output {
+        &self.data[range]
+    }
+}
+
+impl Index<RangeFrom<usize>> for String64 {
+    type Output = [u64];
+
+    fn index(&self, range: RangeFrom<usize>) -> &Self::Output {
+        &self.data[range]
+    }
+}
+
+impl Index<RangeTo<usize>> for String64 {
+    type Output = [u64];
+
+    fn index(&self, range: RangeTo<usize>) -> &Self::Output {
+        &self.data[range]
+    }
+}
+
+impl Index<RangeFull> for String64 {
+    type Output = [u64];
+
+    fn index(&self, range: RangeFull) -> &Self::Output {
+        &self.data[range]
+    }
+}
+
+/// Iterator that yields characters from a String64 by consuming it.
+pub struct IntoIter {
+    data: std::vec::IntoIter<u64>,
+}
+
+impl Iterator for IntoIter {
+    type Item = char;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.data.next().map(|utf64_char| {
+            // Extract upper 32 bits and decode the UTF-8
+            let upper_bits = (utf64_char >> 32) as u32;
+            let bytes = [
+                ((upper_bits >> 24) & 0xFF) as u8,
+                ((upper_bits >> 16) & 0xFF) as u8,
+                ((upper_bits >> 8) & 0xFF) as u8,
+                (upper_bits & 0xFF) as u8,
+            ];
+
+            // Determine UTF-8 length and decode
+            let len = if bytes[0] < 0x80 {
+                1
+            } else if bytes[0] < 0xE0 {
+                2
+            } else if bytes[0] < 0xF0 {
+                3
+            } else {
+                4
+            };
+
+            std::str::from_utf8(&bytes[..len])
+                .ok()
+                .and_then(|s| s.chars().next())
+                .expect("valid UTF64 should decode to valid char")
+        })
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.data.size_hint()
+    }
+}
+
+impl ExactSizeIterator for IntoIter {
+    fn len(&self) -> usize {
+        self.data.len()
+    }
+}
+
+impl IntoIterator for String64 {
+    type Item = char;
+    type IntoIter = IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        IntoIter {
+            data: self.data.into_iter(),
+        }
+    }
+}
+
+/// Iterator that yields characters from a &String64 without consuming it.
+pub struct Iter<'a> {
+    data: std::slice::Iter<'a, u64>,
+}
+
+impl<'a> Iterator for Iter<'a> {
+    type Item = char;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.data.next().map(|&utf64_char| {
+            // Extract upper 32 bits and decode the UTF-8
+            let upper_bits = (utf64_char >> 32) as u32;
+            let bytes = [
+                ((upper_bits >> 24) & 0xFF) as u8,
+                ((upper_bits >> 16) & 0xFF) as u8,
+                ((upper_bits >> 8) & 0xFF) as u8,
+                (upper_bits & 0xFF) as u8,
+            ];
+
+            // Determine UTF-8 length and decode
+            let len = if bytes[0] < 0x80 {
+                1
+            } else if bytes[0] < 0xE0 {
+                2
+            } else if bytes[0] < 0xF0 {
+                3
+            } else {
+                4
+            };
+
+            std::str::from_utf8(&bytes[..len])
+                .ok()
+                .and_then(|s| s.chars().next())
+                .expect("valid UTF64 should decode to valid char")
+        })
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.data.size_hint()
+    }
+}
+
+impl<'a> ExactSizeIterator for Iter<'a> {
+    fn len(&self) -> usize {
+        self.data.len()
+    }
+}
+
+impl<'a> IntoIterator for &'a String64 {
+    type Item = char;
+    type IntoIter = Iter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        Iter {
+            data: self.data.iter(),
+        }
+    }
+}
+
+impl FromIterator<char> for String64 {
+    fn from_iter<T: IntoIterator<Item = char>>(iter: T) -> Self {
+        let mut s = String64::new();
+        s.extend(iter);
+        s
+    }
+}
+
+impl Extend<char> for String64 {
+    fn extend<T: IntoIterator<Item = char>>(&mut self, iter: T) {
+        for ch in iter {
+            let mut utf8_buf = [0u8; 4];
+            let utf8_bytes = ch.encode_utf8(&mut utf8_buf).as_bytes();
+
+            // Pack UTF-8 bytes into upper 32 bits
+            let mut upper_bits: u32 = 0;
+            for (i, &byte) in utf8_bytes.iter().enumerate() {
+                upper_bits |= (byte as u32) << (24 - (i * 8));
+            }
+
+            let utf64_char = (upper_bits as u64) << 32;
+            self.data.push(utf64_char);
         }
     }
 }

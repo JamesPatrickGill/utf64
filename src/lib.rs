@@ -137,4 +137,69 @@ mod tests {
         let upper_bits = (slice[0] >> 32) as u32;
         assert_eq!(upper_bits, 0xF09F9880);
     }
+
+    #[test]
+    fn test_hash() {
+        use std::collections::HashMap;
+        let mut map = HashMap::new();
+        let s = String64::from("hello");
+        map.insert(s.clone(), 42);
+        assert_eq!(map.get(&s), Some(&42));
+    }
+
+    #[test]
+    fn test_ord() {
+        let s1 = String64::from("apple");
+        let s2 = String64::from("banana");
+        let s3 = String64::from("apple");
+
+        assert!(s1 < s2);
+        assert!(s2 > s1);
+        assert_eq!(s1.cmp(&s3), std::cmp::Ordering::Equal);
+    }
+
+    #[test]
+    fn test_indexing() {
+        let s = String64::from("Hi");
+        let first = s[0];
+        let upper_bits = (first >> 32) as u32;
+        assert_eq!(upper_bits, 0x48000000); // 'H'
+    }
+
+    #[test]
+    fn test_range_indexing() {
+        let s = String64::from("Hello");
+        let slice = &s[1..3];
+        assert_eq!(slice.len(), 2);
+    }
+
+    #[test]
+    fn test_into_iterator() {
+        let s = String64::from("Hi🌍");
+        let chars: Vec<char> = s.into_iter().collect();
+        assert_eq!(chars, vec!['H', 'i', '🌍']);
+    }
+
+    #[test]
+    fn test_ref_iterator() {
+        let s = String64::from("Hi");
+        let chars: Vec<char> = (&s).into_iter().collect();
+        assert_eq!(chars, vec!['H', 'i']);
+        // s is still usable
+        assert_eq!(s.len(), 2);
+    }
+
+    #[test]
+    fn test_from_iterator() {
+        let chars = vec!['H', 'e', 'l', 'l', 'o'];
+        let s: String64 = chars.into_iter().collect();
+        assert_eq!(s.to_string().unwrap(), "Hello");
+    }
+
+    #[test]
+    fn test_extend() {
+        let mut s = String64::from("Hello");
+        s.extend(vec![' ', 'W', 'o', 'r', 'l', 'd']);
+        assert_eq!(s.to_string().unwrap(), "Hello World");
+    }
 }
