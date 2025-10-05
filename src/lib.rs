@@ -202,4 +202,46 @@ mod tests {
         s.extend(vec![' ', 'W', 'o', 'r', 'l', 'd']);
         assert_eq!(s.to_string().unwrap(), "Hello World");
     }
+
+    #[test]
+    fn test_add() {
+        let s1 = String64::from("Hello");
+        let s2 = s1 + " World";
+        assert_eq!(s2.to_string().unwrap(), "Hello World");
+    }
+
+    #[test]
+    fn test_add_assign() {
+        let mut s = String64::from("Hello");
+        s += " World";
+        assert_eq!(s.to_string().unwrap(), "Hello World");
+    }
+
+    #[test]
+    fn test_partial_eq_str() {
+        let s = String64::from("test");
+        assert_eq!(s, "test");
+        assert_ne!(s, "other");
+    }
+
+    #[test]
+    fn test_partial_eq_string() {
+        let s = String64::from("test");
+        let string = String::from("test");
+        assert_eq!(s, string);
+    }
+
+    #[test]
+    fn test_as_ref() {
+        let s = String64::from("Hi");
+        let slice: &[u64] = s.as_ref();
+        assert_eq!(slice.len(), 2);
+    }
+
+    #[test]
+    fn test_try_from() {
+        let s = String64::from("test");
+        let result = String::try_from(s);
+        assert_eq!(result.unwrap(), "test");
+    }
 }

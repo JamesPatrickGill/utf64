@@ -3,7 +3,7 @@ use std::{
     fmt,
     hash::{Hash, Hasher},
     iter::{Extend, FromIterator},
-    ops::{Index, Range, RangeFrom, RangeFull, RangeTo},
+    ops::{Add, AddAssign, Index, Range, RangeFrom, RangeFull, RangeTo},
     str::FromStr,
 };
 
@@ -369,5 +369,63 @@ impl Extend<char> for String64 {
             let utf64_char = (upper_bits as u64) << 32;
             self.data.push(utf64_char);
         }
+    }
+}
+
+impl Add<&str> for String64 {
+    type Output = String64;
+
+    fn add(mut self, rhs: &str) -> Self::Output {
+        self.extend(rhs.chars());
+        self
+    }
+}
+
+impl AddAssign<&str> for String64 {
+    fn add_assign(&mut self, rhs: &str) {
+        self.extend(rhs.chars());
+    }
+}
+
+impl PartialEq<str> for String64 {
+    fn eq(&self, other: &str) -> bool {
+        match self.to_string() {
+            Ok(s) => s == other,
+            Err(_) => false,
+        }
+    }
+}
+
+impl PartialEq<&str> for String64 {
+    fn eq(&self, other: &&str) -> bool {
+        self.eq(*other)
+    }
+}
+
+impl PartialEq<String> for String64 {
+    fn eq(&self, other: &String) -> bool {
+        self.eq(other.as_str())
+    }
+}
+
+impl AsRef<[u64]> for String64 {
+    fn as_ref(&self) -> &[u64] {
+        &self.data
+    }
+}
+
+impl TryFrom<String64> for String {
+    type Error = Utf64Error;
+
+    fn try_from(value: String64) -> Result<Self> {
+        value.to_string()
+    }
+}
+
+impl TryFrom<&String64> for String {
+    type Error = Utf64Error;
+
+    fn try_from(value: &String64) -> Result<Self> {
+        value.to_string()
     }
 }
