@@ -244,4 +244,26 @@ mod tests {
         let result = String::try_from(s);
         assert_eq!(result.unwrap(), "test");
     }
+
+    #[test]
+    fn test_deref() {
+        let s = String64::from("Hi");
+        let slice: &[u64] = &*s;  // Deref coercion
+        assert_eq!(slice.len(), 2);
+    }
+
+    #[test]
+    fn test_deref_mut() {
+        let mut s = String64::from("Hi");
+        let slice: &mut [u64] = &mut *s;
+        assert_eq!(slice.len(), 2);
+    }
+
+    #[test]
+    fn test_borrow() {
+        use std::borrow::Borrow;
+        let s = String64::from("test");
+        let borrowed: &[u64] = s.borrow();
+        assert_eq!(borrowed.len(), 4);
+    }
 }

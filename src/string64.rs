@@ -1,9 +1,10 @@
 use crate::error::{Result, Utf64Error};
 use std::{
+    borrow::{Borrow, BorrowMut},
     fmt,
     hash::{Hash, Hasher},
     iter::{Extend, FromIterator},
-    ops::{Add, AddAssign, Index, Range, RangeFrom, RangeFull, RangeTo},
+    ops::{Add, AddAssign, Deref, DerefMut, Index, Range, RangeFrom, RangeFull, RangeTo},
     str::FromStr,
 };
 
@@ -427,5 +428,31 @@ impl TryFrom<&String64> for String {
 
     fn try_from(value: &String64) -> Result<Self> {
         value.to_string()
+    }
+}
+
+impl Deref for String64 {
+    type Target = [u64];
+
+    fn deref(&self) -> &Self::Target {
+        &self.data
+    }
+}
+
+impl DerefMut for String64 {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.data
+    }
+}
+
+impl Borrow<[u64]> for String64 {
+    fn borrow(&self) -> &[u64] {
+        &self.data
+    }
+}
+
+impl BorrowMut<[u64]> for String64 {
+    fn borrow_mut(&mut self) -> &mut [u64] {
+        &mut self.data
     }
 }
