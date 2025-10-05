@@ -2,5 +2,9 @@
 name = "utf-64"
 version = "0.1.0"
 edition = "2024"
+description = "The next-generation text encoding standard using 64 bits per character"
+license = "MIT OR Apache-2.0"
+keywords = ["encoding", "utf64", "unicode", "text", "string"]
+categories = ["encoding", "text-processing"]
 
 [dependencies]
