@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "utf64"
+name = "utf-64"
 version = "0.1.0"
