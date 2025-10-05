@@ -12,7 +12,11 @@ use std::{
 ///
 /// UTF64 is a fixed-width encoding where each character occupies exactly 64 bits (8 bytes).
 /// The upper 32 bits contain the UTF-8 encoding of the character (left-aligned, zero-padded),
-/// while the lower 32 bits are reserved for future use and must be zero in v1.0.
+/// while the lower 32 bits are reserved for future specification versions.
+///
+/// **Specification Version:** This implementation conforms to UTF64 v1.0, which requires
+/// all reserved bits (lower 32 bits) to be zero. Future versions may define uses for these
+/// bits while maintaining backward compatibility.
 ///
 /// # Examples
 ///

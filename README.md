@@ -8,12 +8,16 @@ UTF64 eliminates the variable-width limitations of UTF-8 and UTF-16 by using a c
 
 ## Encoding Specification
 
+### Version 1.0
+
 Each UTF64 character consists of 64 bits (8 bytes) with the following layout:
 
 ```
 Bits 63-32 (Upper 32 bits): UTF-8 encoding (left-aligned, zero-padded)
-Bits 31-0  (Lower 32 bits): Reserved for future use (must be zero in v1.0)
+Bits 31-0  (Lower 32 bits): Reserved for future use (MUST be zero in v1.0)
 ```
+
+**Important:** This is the initial version of the UTF64 specification. The lower 32 bits are currently required to be zero to maintain forward compatibility. Future versions of the specification may define uses for these bits, enabling backward-compatible extensions while v1.0 implementations can continue to operate by validating and rejecting non-zero reserved bits.
 
 ### Examples
 
@@ -172,18 +176,39 @@ The library provides comprehensive error handling:
 - `InvalidUtf64`: UTF64 data is corrupted
 - `NonZeroReservedBits`: Reserved bits violated (not v1.0 compliant)
 
-## Future Extensions
+## Specification Versioning
 
-The 32 reserved bits in each character enable potential future enhancements:
+UTF64 v1.0 is the foundational specification. The 32 reserved bits per character provide extensive room for future standardization efforts.
 
-- Character metadata flags
-- Locale hints
-- Rendering preferences
-- Bidirectional text information
-- Font suggestions
-- Color information
-- Blockchain integration
-- Quantum computing compatibility
+### Reserved Bits: Future Possibilities
+
+The lower 32 bits reserved in v1.0 enable potential future specification versions to add:
+
+**Text Metadata (v2.0+)**
+- Character-level styling flags
+- Locale and language hints
+- Bidirectional text markers
+- Font family suggestions
+
+**Advanced Features (v3.0+)**
+- Inline color information
+- Accessibility metadata
+- Security and validation flags
+- Application-specific extensions
+
+**Enterprise & Emerging Tech (v4.0+)**
+- Blockchain verification data
+- Quantum-resistant signatures
+- AI/ML annotation hints
+- Distributed system coordination
+
+### Version Compatibility
+
+UTF64 is designed for graceful version compatibility:
+
+- **Forward compatible:** v1.0 parsers will reject future-versioned data (non-zero reserved bits), ensuring no silent corruption
+- **Backward compatible:** Future parsers can detect v1.0 data (all-zero reserved bits) and process accordingly
+- **Explicit versioning:** Reserved bits allow embedding version markers for automatic detection
 
 ## License
 

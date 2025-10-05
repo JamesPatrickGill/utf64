@@ -10,6 +10,10 @@ pub enum Utf64Error {
     InvalidUtf64,
 
     /// Reserved bits are not zero (violates UTF64 v1.0 specification).
+    ///
+    /// The UTF64 v1.0 specification requires the lower 32 bits of each character to be zero.
+    /// This error indicates data that may be from a future UTF64 specification version,
+    /// or corrupted data.
     NonZeroReservedBits,
 }
 
